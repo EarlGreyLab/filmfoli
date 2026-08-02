@@ -1,0 +1,286 @@
+@import "tailwindcss";
+@import "@fontsource/instrument-serif";
+@import "@fontsource/instrument-serif/400-italic.css";
+@import "@fontsource-variable/archivo";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+
+/* Tailwind v4 has no config file — the design system lives here.
+   `dark:` variant is driven by a .dark class on <html> (set pre-paint
+   in index.html, toggled by ThemeProvider). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Semantic tokens. Raw values live on :root/.dark below and flip per
+   theme; @theme inline maps them to utilities (bg-paper, text-ink…),
+   so components never hardcode a hex. */
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-faded: var(--faded);
+  --color-line: var(--line);
+  --color-mask: var(--mask);
+  --color-safelight: var(--safelight);
+
+  --font-display: "Instrument Serif", Georgia, serif;
+  --font-sans: "Archivo Variable", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* MagicUI animation utilities (ripple-button, marquee) */
+  --animate-rippling: rippling var(--duration) ease-out;
+  --animate-marquee: marquee var(--duration) infinite linear;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+}
+
+/* ---- MagicUI keyframes ---- */
+@keyframes rippling {
+  0% { opacity: 1; }
+  100% { transform: scale(2); opacity: 0; }
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(-100% - var(--gap))); }
+}
+@keyframes marquee-vertical {
+  from { transform: translateY(0); }
+  to { transform: translateY(calc(-100% - var(--gap))); }
+}
+
+/* ---- Animated Theme Toggler (View Transitions API) ----
+   Let the JS clip-path animation own the reveal; kill the default
+   cross-fade. The [data-magicui-theme-vt] rule pins the collapsed
+   clip before the JS animation starts (Firefox flash guard). */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+html[data-magicui-theme-vt="active"]::view-transition-new(root) {
+  clip-path: var(--magicui-theme-vt-clip-from);
+}
+html[data-magicui-theme-vt="active"]::view-transition-group(root) {
+  animation-duration: var(--magicui-theme-toggle-vt-duration, 400ms);
+}
+
+:root {
+  /* GALLERY — warm fiber paper, ink, C-41 orange-mask accent */
+  --paper: #f6f2ea;
+  --surface: #ede7db;
+  --ink: #221c15;
+  --faded: #71675a;
+  --line: #d9d1c1;
+  --mask: #b4551a;
+  --safelight: #b4551a;
+}
+.dark {
+  /* DARKROOM — exposed film base (warm brown-black), amber, safelight red */
+  --paper: #131009;
+  --surface: #1d1811;
+  --ink: #eae2d3;
+  --faded: #9a8f7c;
+  --line: #2e2820;
+  --mask: #e68a3b;
+  --safelight: #ff5138;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-paper text-ink font-sans antialiased;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+/* Light mode only: barely-there fiber-paper texture on the page itself */
+:root:not(.dark) body {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.12' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0.55 0 0 0 0 0.5 0 0 0 0 0.42 0 0 0 0.035 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23p)'/%3E%3C/svg%3E");
+}
+
+::selection {
+  background: var(--mask);
+  color: var(--paper);
+}
+
+/* ---- Signature device: 35mm rebate sprocket holes ----
+   A repeating-gradient "film edge" used by <RebateStrip/>. Pure CSS so it
+   inherits currentColor and stays crisp at any width. */
+.sprockets {
+  height: 10px;
+  background-image: repeating-linear-gradient(
+    to right,
+    currentColor 0 12px,
+    transparent 12px 26px
+  );
+  border-radius: 2px;
+  mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+}
+
+/* ---- Photo frame treatment ---- */
+.frame {
+  @apply relative overflow-hidden bg-surface;
+}
+.frame img {
+  @apply h-full w-full object-cover;
+  transition: transform 0.7s cubic-bezier(0.2, 0.6, 0.2, 1), filter 0.5s ease;
+}
+/* Hover: gentle zoom + a soft vignette, like holding a print to the light.
+   Dark mode tints the vignette safelight-red. */
+.frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  box-shadow: inset 0 0 90px 12px rgb(0 0 0 / 0.35);
+}
+.dark .frame::after {
+  box-shadow: inset 0 0 100px 14px color-mix(in srgb, var(--safelight) 28%, black 60%);
+}
+@media (hover: hover) {
+  .frame:hover img { transform: scale(1.025); }
+  .frame:hover::after { opacity: 1; }
+}
+
+/* ---- Scroll reveal (used by <Reveal/>) ---- */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0.6, 0.2, 1);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---- Route transition ---- */
+.page-enter {
+  animation: page-in 0.45s ease both;
+}
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .reveal, .page-enter { opacity: 1; transform: none; animation: none; transition: none; }
+  .frame img { transition: none; }
+}
+
+/* ---- MDX prose (hand-rolled; no typography plugin needed at this scale) ---- */
+.prose-film {
+  @apply text-[1.05rem] leading-relaxed;
+}
+.prose-film > * + * { margin-top: 1.25em; }
+.prose-film h2 {
+  @apply font-display text-3xl mt-14 mb-2;
+}
+.prose-film h3 {
+  @apply font-display text-2xl mt-10 mb-1;
+}
+.prose-film a {
+  @apply text-mask underline underline-offset-4 decoration-1 hover:decoration-2;
+}
+.prose-film blockquote {
+  @apply border-l-2 border-mask pl-5 italic text-faded;
+}
+.prose-film em { @apply font-display italic text-[1.1em]; }
+.prose-film ul { @apply list-disc pl-5 space-y-1; }
+.prose-film code { @apply font-mono text-[0.85em] bg-surface px-1.5 py-0.5 rounded; }
+.prose-film hr { @apply border-line my-12; }
+
+.fade-in-anim { animation: fade-in 0.3s ease both; }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---- Hero scroll cue: a slow, quiet nudge downward ---- */
+.hero-cue { animation: hero-cue 2.2s ease-in-out infinite; }
+@keyframes hero-cue {
+  0%, 100% { transform: translate(-50%, 0); opacity: 0.7; }
+  50% { transform: translate(-50%, 8px); opacity: 0.35; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-cue { animation: none; }
+}
+
+/* ---- Staggered menu (ported from Atelier Lichtwerk, restyled) ----
+   Right-side glass panel over the paper; links advance in one-by-one
+   like frames on a roll. Delay is driven by --i set inline per item. */
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--ink) 40%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s ease;
+  z-index: 40;
+}
+.menu-overlay.is-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.menu-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(400px, 92vw);
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-left: 1px solid var(--line);
+  box-shadow: -24px 0 48px rgb(0 0 0 / 0.25);
+  opacity: 0;
+  transform: translate3d(24px, 0, 0);
+  transition: transform 0.34s cubic-bezier(0.22, 0.7, 0.3, 1), opacity 0.24s ease;
+  pointer-events: none;
+  z-index: 50;
+}
+.menu-panel.is-open {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  pointer-events: auto;
+}
+
+/* Staggered entrance: each item waits --i * 60ms after the panel opens */
+.menu-item {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  transition-delay: 0ms;
+}
+.menu-panel.is-open .menu-item {
+  opacity: 1;
+  transform: none;
+  transition-delay: calc(80ms + var(--i, 0) * 60ms);
+}
+
+/* Growing mask-orange underline on the link text (hover + keyboard focus) */
+.menu-link__text {
+  position: relative;
+}
+.menu-link__text::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -0.3rem;
+  height: 2px;
+  width: 0;
+  background: var(--mask);
+  transition: width 0.3s ease;
+}
+.menu-link:hover .menu-link__text::after,
+.menu-link:focus-visible .menu-link__text::after {
+  width: 60%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-panel,
+  .menu-overlay,
+  .menu-item,
+  .menu-link__text::after {
+    transition: none !important;
+  }
+}

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Yun — Film Photography</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="description" content="Analog point-and-shoot photography by Yun. Rolls, trips, and notes from the field." />
+    <meta property="og:title" content="Yun — Film Photography" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/photos/p01.svg" />
+    <script>
+      // Runs before paint to avoid a light-mode flash for dark-mode users.
+      // Priority: saved choice > OS preference.
+      (function () {
+        var t = localStorage.getItem("theme");
+        if (t === "dark" || (!t && matchMedia("(prefers-color-scheme: dark)").matches)) {
+          document.documentElement.classList.add("dark");
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
