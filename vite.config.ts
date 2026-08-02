@@ -4,6 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 import mdx from "@mdx-js/rollup";
 
 export default defineConfig({
+  base: "/filmfoli/",
   plugins: [
     // MDX must run before React's plugin so .mdx compiles to JSX first.
     { enforce: "pre", ...mdx({ providerImportSource: "@mdx-js/react" }) },
