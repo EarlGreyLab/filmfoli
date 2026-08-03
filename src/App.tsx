@@ -22,7 +22,7 @@ function ScrollToTop() {
 export default function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <ScrollToTop />
         <GrainOverlay />
         <div className="flex min-h-screen flex-col">
