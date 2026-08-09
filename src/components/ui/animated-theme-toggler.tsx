@@ -227,7 +227,16 @@ export const AnimatedThemeToggler = ({
       }
     }
 
-    if (typeof document.startViewTransition !== "function") {
+    // A full-viewport clip-path wipe is exactly the kind of motion
+    // prefers-reduced-motion exists to suppress — flip the theme instantly.
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches
+
+    if (
+      prefersReducedMotion ||
+      typeof document.startViewTransition !== "function"
+    ) {
       applyTheme()
       return
     }

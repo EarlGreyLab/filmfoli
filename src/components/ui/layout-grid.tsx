@@ -13,7 +13,10 @@ import { cn } from "../../lib/utils";
  * - Cards are <button>s with real alt text and visible focus rings.
  * - Escape closes; body scroll locks while a frame is open.
  * - Reduced motion: the lift becomes an instant swap.
- * - Colors/typography come from the design tokens, not hardcoded slate/white.
+ * - Chrome (surfaces, focus rings) comes from the design tokens instead of
+ *   the stock slate palette. The scrims stay literal black/white on purpose:
+ *   they sit over photographs, not over the page, so they must not flip with
+ *   the theme.
  */
 
 export type LayoutGridCard = {

@@ -1,23 +1,105 @@
 import React, { useEffect, useState, type MouseEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import { cn } from "../../lib/utils";
 
 /**
  * MagicUI Ripple Button (https://magicui.design/docs/components/ripple-button),
  * adapted for Filmfolio: default chrome stripped so `buttonVariants` styles
- * pass through untouched, plus an optional `to` prop so it can act as a
- * router link (the hero CTAs navigate). Ripple color defaults to the theme's
- * paper token, which reads correctly on both ink and mask backgrounds.
+ * pass through untouched, plus an optional `to` prop. Ripple color defaults to
+ * the theme's paper token, which reads correctly on both ink and mask
+ * backgrounds.
+ *
+ * With `to` it renders a real <Link>, not a button that calls navigate():
+ * the hero CTA is the site's primary navigation, so it has to support
+ * cmd/middle-click, "open in new tab", and be announced as a link. The ripple
+ * is pure decoration layered on top and never delays the navigation.
  */
 
-interface RippleButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+type RippleVisualProps = {
   rippleColor?: string;
   duration?: string;
-  /** Optional route — click ripples, then navigates. */
-  to?: string;
+};
+
+type RippleButtonProps = RippleVisualProps &
+  React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    /** Optional route — renders an anchor instead of a button. */
+    to?: string;
+  };
+
+type Ripple = { x: number; y: number; size: number; key: number };
+
+/** Shared ripple state + the two layers every variant renders. */
+function useRipples(duration: string) {
+  const [ripples, setRipples] = useState<Ripple[]>([]);
+
+  const spawn = (event: MouseEvent<HTMLElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    setRipples((prev) => [
+      ...prev,
+      {
+        x: event.clientX - rect.left - size / 2,
+        y: event.clientY - rect.top - size / 2,
+        size,
+        key: Date.now(),
+      },
+    ]);
+  };
+
+  useEffect(() => {
+    if (ripples.length === 0) return;
+    const last = ripples[ripples.length - 1];
+    const timeout = setTimeout(
+      () => setRipples((prev) => prev.filter((r) => r.key !== last.key)),
+      parseInt(duration)
+    );
+    return () => clearTimeout(timeout);
+  }, [ripples, duration]);
+
+  return { ripples, spawn };
 }
+
+function RippleLayers({
+  children,
+  ripples,
+  rippleColor,
+  duration,
+}: {
+  children: React.ReactNode;
+  ripples: Ripple[];
+  rippleColor: string;
+  duration: string;
+}) {
+  return (
+    <>
+      <span className="relative z-10 inline-flex items-center gap-2">
+        {children}
+      </span>
+      <span aria-hidden="true" className="pointer-events-none absolute inset-0">
+        {ripples.map((ripple) => (
+          <span
+            className="animate-rippling absolute rounded-full opacity-30"
+            key={ripple.key}
+            style={
+              {
+                width: `${ripple.size}px`,
+                height: `${ripple.size}px`,
+                top: `${ripple.y}px`,
+                left: `${ripple.x}px`,
+                backgroundColor: rippleColor,
+                transform: `scale(0)`,
+                "--duration": duration,
+              } as React.CSSProperties
+            }
+          />
+        ))}
+      </span>
+    </>
+  );
+}
+
+const surfaceClass = "relative cursor-pointer overflow-hidden text-center";
 
 export const RippleButton = React.forwardRef<
   HTMLButtonElement,
@@ -35,75 +117,45 @@ export const RippleButton = React.forwardRef<
     },
     ref
   ) => {
-    const navigate = useNavigate();
-    const [buttonRipples, setButtonRipples] = useState<
-      Array<{ x: number; y: number; size: number; key: number }>
-    >([]);
+    const { ripples, spawn } = useRipples(duration);
+    const layers = (
+      <RippleLayers
+        ripples={ripples}
+        rippleColor={rippleColor}
+        duration={duration}
+      >
+        {children}
+      </RippleLayers>
+    );
 
-    const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
-      createRipple(event);
-      onClick?.(event);
-      // Let the ripple be seen for a beat before the route changes.
-      if (to) setTimeout(() => navigate(to), 180);
-    };
-
-    const createRipple = (event: MouseEvent<HTMLButtonElement>) => {
-      const button = event.currentTarget;
-      const rect = button.getBoundingClientRect();
-      const size = Math.max(rect.width, rect.height);
-      const x = event.clientX - rect.left - size / 2;
-      const y = event.clientY - rect.top - size / 2;
-
-      setButtonRipples((prev) => [...prev, { x, y, size, key: Date.now() }]);
-    };
-
-    useEffect(() => {
-      let timeout: ReturnType<typeof setTimeout> | null = null;
-      if (buttonRipples.length > 0) {
-        const lastRipple = buttonRipples[buttonRipples.length - 1];
-        timeout = setTimeout(() => {
-          setButtonRipples((prev) =>
-            prev.filter((r) => r.key !== lastRipple.key)
-          );
-        }, parseInt(duration));
-      }
-      return () => {
-        if (timeout !== null) clearTimeout(timeout);
-      };
-    }, [buttonRipples, duration]);
+    if (to) {
+      // Anchor semantics: the router handles the click, the ripple is only
+      // decoration on top of it — nothing here delays the navigation.
+      return (
+        <Link
+          to={to}
+          className={cn(surfaceClass, className)}
+          onClick={spawn}
+          aria-label={props["aria-label"]}
+          title={props.title}
+          id={props.id}
+        >
+          {layers}
+        </Link>
+      );
+    }
 
     return (
       <button
-        className={cn(
-          "relative cursor-pointer overflow-hidden text-center",
-          className
-        )}
-        onClick={handleClick}
+        className={cn(surfaceClass, className)}
+        onClick={(event) => {
+          spawn(event);
+          onClick?.(event);
+        }}
         ref={ref}
         {...props}
       >
-        <span className="relative z-10 inline-flex items-center gap-2">
-          {children}
-        </span>
-        <span className="pointer-events-none absolute inset-0">
-          {buttonRipples.map((ripple) => (
-            <span
-              className="animate-rippling absolute rounded-full opacity-30"
-              key={ripple.key}
-              style={
-                {
-                  width: `${ripple.size}px`,
-                  height: `${ripple.size}px`,
-                  top: `${ripple.y}px`,
-                  left: `${ripple.x}px`,
-                  backgroundColor: rippleColor,
-                  transform: `scale(0)`,
-                  "--duration": duration,
-                } as React.CSSProperties
-              }
-            />
-          ))}
-        </span>
+        {layers}
       </button>
     );
   }

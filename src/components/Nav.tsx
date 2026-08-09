@@ -37,19 +37,43 @@ export function Nav() {
   const toggleRef = useRef<HTMLButtonElement>(null);
 
   // Body scroll lock + ESC to close (behavior ported from staggered-menu.js)
+  // plus a focus trap: the panel claims aria-modal, and the overlay blocks the
+  // mouse, so Tab must not be able to walk out into the page behind it.
   useEffect(() => {
     if (!open) return;
+    const panel = panelRef.current;
+    const toggle = toggleRef.current;
     document.body.style.overflow = "hidden";
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+        return;
+      }
+      if (e.key !== "Tab" || !panel) return;
+      const focusable = panel.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && (active === first || !panel.contains(active))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
+
     document.addEventListener("keydown", onKey);
     // Move focus into the panel for keyboard users
-    panelRef.current?.querySelector("a")?.focus();
+    panel?.querySelector("a")?.focus();
     return () => {
       document.body.style.overflow = "";
       document.removeEventListener("keydown", onKey);
-      toggleRef.current?.focus();
+      toggle?.focus();
     };
   }, [open]);
 

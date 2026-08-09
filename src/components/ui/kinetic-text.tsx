@@ -10,6 +10,12 @@ import { cn } from "../../lib/utils";
  * NOTE: needs a *variable* font with a weight axis. In this project that's
  * Archivo Variable (font-sans). Instrument Serif only ships weight 400,
  * so pair this component with `font-sans`.
+ *
+ * The swell animates font-weight and padding, which are layout properties —
+ * unavoidable, it's the whole effect. It is deliberately hover-only and
+ * confined to the hero's one heading, and `will-change` is *not* declared:
+ * these properties can't be composited, so hinting them only costs memory.
+ * Reduced-motion users get the weights without the transition.
  */
 
 type As = "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "p" | "span";
@@ -42,7 +48,7 @@ export function KineticText({
         <span
           key={i}
           aria-hidden="true"
-          className="[will-change:font-weight,-webkit-text-stroke-width,padding] [-webkit-text-stroke-color:transparent] [-webkit-text-stroke-width:var(--text-stroke-width)] [transition:font-weight_0.4s,_-webkit-text-stroke-color_0.4s,_padding_0.4s] hover:[padding-inline:var(--hover-padding)] hover:font-[900] hover:[-webkit-text-stroke-color:currentcolor] hover:[-webkit-text-stroke-width:calc(var(--text-stroke-width)*2)] has-[+span+span:hover]:font-[400] has-[+span:hover]:[padding-inline:var(--hover-padding)] has-[+span:hover]:font-[600] [:hover+&]:[padding-inline:var(--hover-padding)] [:hover+&]:font-[600] [:hover+span+&]:font-[400]"
+          className="[-webkit-text-stroke-color:transparent] [-webkit-text-stroke-width:var(--text-stroke-width)] [transition:font-weight_0.4s,_-webkit-text-stroke-color_0.4s,_padding_0.4s] motion-reduce:transition-none hover:[padding-inline:var(--hover-padding)] hover:font-[900] hover:[-webkit-text-stroke-color:currentcolor] hover:[-webkit-text-stroke-width:calc(var(--text-stroke-width)*2)] has-[+span+span:hover]:font-[400] has-[+span:hover]:[padding-inline:var(--hover-padding)] has-[+span:hover]:font-[600] [:hover+&]:[padding-inline:var(--hover-padding)] [:hover+&]:font-[600] [:hover+span+&]:font-[400]"
         >
           {letter === " " ? "\u00A0" : letter}
         </span>

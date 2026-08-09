@@ -19,8 +19,14 @@ export function Contact() {
     window.location.href = url;
   };
 
+  // border-control (not border-line): a form field's boundary has to clear
+  // 3:1 per WCAG 1.4.11, which the decorative --line token doesn't.
+  // The focus ring is a real outline, not just a border-color swap.
   const inputClass =
-    "w-full border border-line bg-transparent px-4 py-3 text-sm placeholder:text-faded/70 focus:border-mask focus:outline-none transition-colors";
+    "w-full border border-control bg-transparent px-4 py-3 text-sm placeholder:text-faded transition-colors focus:border-mask focus:outline-2 focus:outline-offset-2 focus:outline-mask";
+
+  const labelClass =
+    "block font-mono text-[0.62rem] uppercase tracking-[0.2em] text-faded";
 
   return (
     <div className="page-enter mx-auto max-w-6xl px-5 pb-8 pt-14 sm:px-8">
@@ -54,22 +60,34 @@ export function Contact() {
         <div className="md:col-span-6 md:col-start-7">
           <RebateStrip label="Contact sheet" frame="01A" />
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
-            <input
-              className={inputClass}
-              placeholder="Subject"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              aria-label="Subject"
-            />
-            <textarea
-              className={inputClass}
-              rows={6}
-              placeholder="Your message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              aria-label="Message"
-              required
-            />
+            <div className="space-y-1.5">
+              <label className={labelClass} htmlFor="contact-subject">
+                Subject
+              </label>
+              <input
+                id="contact-subject"
+                name="subject"
+                className={inputClass}
+                placeholder="Prints, collabs, film chat…"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className={labelClass} htmlFor="contact-message">
+                Message
+              </label>
+              <textarea
+                id="contact-message"
+                name="message"
+                className={inputClass}
+                rows={6}
+                placeholder="Say as much or as little as you like."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                required
+              />
+            </div>
             <Button type="submit" variant="accent">
               Send it to the lab
             </Button>

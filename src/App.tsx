@@ -12,10 +12,12 @@ import { BlogPost } from "./pages/BlogPost";
 import { About } from "./pages/About";
 import { Contact } from "./pages/Contact";
 
-/** SPA housekeeping: jump to top on route change (browsers only do this for full loads). */
+/** SPA housekeeping: jump to top on route change (browsers only do this for full loads).
+ *  `behavior: "instant"` is required — `html { scroll-behavior: smooth }` in index.css
+ *  otherwise applies here too, animating a full-page scroll on every navigation. */
 function ScrollToTop() {
   const { pathname } = useLocation();
-  useEffect(() => window.scrollTo(0, 0), [pathname]);
+  useEffect(() => window.scrollTo({ top: 0, behavior: "instant" }), [pathname]);
   return null;
 }
 
