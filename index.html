@@ -6,9 +6,15 @@
     <title>Yun — Film Photography</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="description" content="Analog point-and-shoot photography by Yun. Rolls, trips, and notes from the field." />
+    <!-- Crawler fallback for the home page. og:* must be absolute URLs, so
+         these are written out in full rather than relying on Vite's base
+         rewriting (which only produces root-relative paths). -->
     <meta property="og:title" content="Yun — Film Photography" />
+    <meta property="og:description" content="Analog point-and-shoot photography by Yun. Rolls, trips, and notes from the field." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/photos/p01.svg" />
+    <meta property="og:url" content="https://earlgreylab.github.io/filmfoli/" />
+    <meta property="og:image" content="https://earlgreylab.github.io/filmfoli/photos/p01.svg" />
+    <meta name="twitter:card" content="summary_large_image" />
     <script>
       // Runs before paint to avoid a light-mode flash for dark-mode users.
       // Priority: saved choice > OS preference.

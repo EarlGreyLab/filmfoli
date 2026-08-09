@@ -3,7 +3,6 @@ import { matches, photos, valuesFor, type FilterKey } from "../lib/photos";
 import { PhotoGrid } from "../components/PhotoGrid";
 import { RebateStrip } from "../components/RebateStrip";
 import { Seo } from "../components/Seo";
-import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { cn } from "../lib/utils";
 
 const dimensions: { key: FilterKey; label: string }[] = [
@@ -16,10 +15,15 @@ const dimensions: { key: FilterKey; label: string }[] = [
 
 /**
  * Two-level filtering, modeled on flipping through a negative binder:
- * Tabs pick the *dimension* (which index you're using — roll, trip,
+ * the top row picks the *dimension* (which index you're using — roll, trip,
  * camera, film, tag), pills pick the *value*. Switching dimensions
  * resets the value to "All frames" — cross-dimension AND filters read
  * as power-user clutter for a portfolio this size.
+ *
+ * Both rows are `aria-pressed` toggle buttons rather than a Radix Tabs
+ * widget. They look like tabs but they aren't: the content they affect (the
+ * grid) lives outside, so real tabs would emit `aria-controls` pointing at
+ * tabpanels that never render.
  */
 export function Gallery() {
   const [dimension, setDimension] = useState<FilterKey>("roll");
@@ -41,17 +45,37 @@ export function Gallery() {
       </header>
 
       <div className="mt-12">
-        <Tabs value={dimension} onValueChange={(v) => { setDimension(v as FilterKey); setValue(null); }}>
-          <TabsList>
-            {dimensions.map((d) => (
-              <TabsTrigger key={d.key} value={d.key}>
-                {d.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+        <div
+          role="group"
+          aria-label="Index the archive by"
+          className="flex flex-wrap gap-x-5 gap-y-1 border-b border-line"
+        >
+          {dimensions.map((d) => (
+            <button
+              key={d.key}
+              type="button"
+              aria-pressed={dimension === d.key}
+              onClick={() => {
+                setDimension(d.key);
+                setValue(null);
+              }}
+              className={cn(
+                "-mb-px border-b-2 pb-2 font-mono text-[0.72rem] uppercase tracking-[0.14em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mask",
+                dimension === d.key
+                  ? "border-mask text-ink"
+                  : "border-transparent text-faded hover:text-ink"
+              )}
+            >
+              {d.label}
+            </button>
+          ))}
+        </div>
 
-        <div className="mt-5 flex flex-wrap gap-2">
+        <div
+          role="group"
+          aria-label={`Filter by ${dimensions.find((d) => d.key === dimension)?.label.toLowerCase()}`}
+          className="mt-5 flex flex-wrap gap-2"
+        >
           <FilterPill active={value === null} onClick={() => setValue(null)}>
             All frames
           </FilterPill>
@@ -85,7 +109,9 @@ function FilterPill({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={cn(
         "border px-3 py-1.5 font-mono text-[0.68rem] uppercase tracking-[0.12em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mask",
         active

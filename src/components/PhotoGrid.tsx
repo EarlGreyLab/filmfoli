@@ -70,7 +70,7 @@ export function PhotoGrid({ photos, ids, caption, className }: PhotoGridProps) {
                 </div>
                 <div className="mt-2 flex items-baseline justify-between font-mono text-[0.62rem] uppercase tracking-[0.18em] text-faded">
                   <span className="truncate transition-colors group-hover:text-ink">{photo.location}</span>
-                  <span className="shrink-0 text-mask/80">{photo.frame}</span>
+                  <span className="shrink-0 text-mask">{photo.frame}</span>
                 </div>
               </button>
             </Reveal>

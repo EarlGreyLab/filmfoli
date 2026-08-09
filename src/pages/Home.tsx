@@ -54,8 +54,15 @@ export function Home() {
           />
         ))}
 
-        {/* Uniform overlay keeps the type legible over any frame */}
+        {/* Uniform overlay keeps the display type legible over any frame.
+            The bottom gradient is a second, stronger scrim for the small mono
+            caption and scroll cue: at 0.65rem they need 4.5:1, which /50 alone
+            can't guarantee over a bright frame. */}
         <div aria-hidden="true" className="absolute inset-0 bg-black/50" />
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/75 to-transparent"
+        />
 
         {/* Centered name + single call to action */}
         <div className="absolute inset-0 flex flex-col items-center justify-center px-5 text-center">
@@ -73,14 +80,14 @@ export function Home() {
         </div>
 
         {/* Frame credit, bottom corner — the rebate doing its usual job */}
-        <p className="absolute bottom-5 left-5 font-mono text-[0.65rem] uppercase tracking-[0.2em] text-white/70 sm:left-8">
+        <p className="absolute bottom-5 left-5 font-mono text-[0.65rem] uppercase tracking-[0.2em] text-white sm:left-8">
           {hero.film} · {hero.location} · {hero.frame}
         </p>
 
         {/* Scroll cue */}
         <ChevronDown
           aria-hidden="true"
-          className="hero-cue absolute bottom-5 left-1/2 size-5 -translate-x-1/2 text-white/70"
+          className="hero-cue absolute bottom-5 left-1/2 size-5 -translate-x-1/2 text-white/90"
         />
       </section>
 
@@ -150,7 +157,7 @@ function toCard(photo: Photo, i: number): LayoutGridCard {
     content: (
       <>
         <h3 className="font-display text-2xl sm:text-3xl">{photo.alt}</h3>
-        <p className="mt-2 font-mono text-[0.68rem] uppercase tracking-[0.18em] text-white/75">
+        <p className="mt-2 font-mono text-[0.68rem] uppercase tracking-[0.18em] text-white/90">
           {photo.camera} · {photo.film} · {photo.location} · {formatDate(photo.date)}
         </p>
       </>

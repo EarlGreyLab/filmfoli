@@ -11,6 +11,7 @@ import {
   motion,
   useAnimationFrame,
   useMotionValue,
+  useReducedMotion,
   useScroll,
   useSpring,
   useVelocity,
@@ -32,6 +33,9 @@ import { cn } from "../../lib/utils";
  * - `will-change: transform` on the moving track and `contain: layout paint`
  *   on the viewport strip, so each row rasterizes independently.
  * - ResizeObserver-based measurement (no re-render storm on resize).
+ * - Under prefers-reduced-motion the drift is switched off at the source:
+ *   no rAF loop at all, and a single static block instead of the wrapping
+ *   copies, so the strip becomes a plain horizontally-scrollable row.
  */
 
 const VelocityContext = createContext<MotionValue<number> | null>(null);
@@ -77,6 +81,7 @@ export function ScrollVelocityRow({
   ...props
 }: VelocityRowProps) {
   const smoothVelocity = useContext(VelocityContext);
+  const reduceMotion = useReducedMotion();
   const baseX = useMotionValue(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const blockRef = useRef<HTMLDivElement>(null);
@@ -86,6 +91,7 @@ export function ScrollVelocityRow({
 
   // Measure one block; render just enough copies to cover the viewport + 1.
   useEffect(() => {
+    if (reduceMotion) return;
     const measure = () => {
       const cw = containerRef.current?.offsetWidth ?? 0;
       const bw = blockRef.current?.offsetWidth ?? 0;
@@ -102,9 +108,10 @@ export function ScrollVelocityRow({
     if (containerRef.current) ro.observe(containerRef.current);
     if (blockRef.current) ro.observe(blockRef.current);
     return () => ro.disconnect();
-  }, [children]);
+  }, [children, reduceMotion]);
 
   useAnimationFrame((_t, delta) => {
+    if (reduceMotion) return;
     const bw = blockWidth.current;
     if (bw <= 0) return;
 
@@ -125,6 +132,21 @@ export function ScrollVelocityRow({
     next = ((next % bw) + bw) % bw; // 0..bw
     baseX.set(next - bw); // -bw..0
   });
+
+  // Reduced motion: one static block the user can scroll themselves. No rAF,
+  // no duplicated copies (which would repeat the same photos to a screen
+  // reader for no reason once nothing is moving).
+  if (reduceMotion) {
+    return (
+      <div
+        ref={containerRef}
+        className={cn("w-full overflow-x-auto whitespace-nowrap", className)}
+        {...props}
+      >
+        <div className="inline-flex">{children}</div>
+      </div>
+    );
+  }
 
   return (
     <div

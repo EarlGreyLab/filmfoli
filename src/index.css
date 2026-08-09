@@ -19,6 +19,7 @@
   --color-ink: var(--ink);
   --color-faded: var(--faded);
   --color-line: var(--line);
+  --color-control: var(--control);
   --color-mask: var(--mask);
   --color-safelight: var(--safelight);
 
@@ -62,15 +63,31 @@ html[data-magicui-theme-vt="active"]::view-transition-group(root) {
   animation-duration: var(--magicui-theme-toggle-vt-duration, 400ms);
 }
 
+/* The toggler skips startViewTransition entirely under reduced motion (see
+   animated-theme-toggler.tsx); this is the belt-and-braces half — if a
+   transition is somehow already in flight, don't clip or animate it. */
+@media (prefers-reduced-motion: reduce) {
+  html[data-magicui-theme-vt="active"]::view-transition-new(root) {
+    clip-path: none;
+  }
+  html[data-magicui-theme-vt="active"]::view-transition-group(root) {
+    animation-duration: 1ms;
+  }
+}
+
+/* Two tiers of edge: --line is decorative (dividers, photo borders) and is
+   allowed to whisper; --control bounds real form fields and must clear the
+   3:1 WCAG 1.4.11 needs for a UI component boundary. */
 :root {
   /* GALLERY — warm fiber paper, ink, C-41 orange-mask accent */
   --paper: #f6f2ea;
   --surface: #ede7db;
   --ink: #221c15;
-  --faded: #71675a;
+  --faded: #6f6558; /* 5.11:1 on paper, 4.64:1 on surface */
   --line: #d9d1c1;
-  --mask: #b4551a;
-  --safelight: #b4551a;
+  --control: #8e8474; /* 3.30:1 on paper */
+  --mask: #a94f18; /* 4.93:1 on paper — 4.5 needs a hair darker than the old #b4551a */
+  --safelight: #a94f18;
 }
 .dark {
   /* DARKROOM — exposed film base (warm brown-black), amber, safelight red */
@@ -79,8 +96,28 @@ html[data-magicui-theme-vt="active"]::view-transition-group(root) {
   --ink: #eae2d3;
   --faded: #9a8f7c;
   --line: #2e2820;
+  --control: #6b6252; /* 3.16:1 on paper */
   --mask: #e68a3b;
   --safelight: #ff5138;
+}
+
+/* The lightbox is always "in the dark", whatever the site theme, so it needs
+   darkroom values that do NOT flip with .dark. These are the frozen Darkroom
+   palette — the single sanctioned exception to "never hardcode a color",
+   expressed as tokens so Lightbox.tsx and its dialog primitive can share them
+   instead of repeating hex literals. */
+:root {
+  --dr-ink: #eae2d3;
+  --dr-faded: #9a8f7c;
+  --dr-mask: #e68a3b;
+  --dr-void: #0c0a06;
+}
+
+@theme inline {
+  --color-dr-ink: var(--dr-ink);
+  --color-dr-faded: var(--dr-faded);
+  --color-dr-mask: var(--dr-mask);
+  --color-dr-void: var(--dr-void);
 }
 
 html {
@@ -167,6 +204,15 @@ body {
   html { scroll-behavior: auto; }
   .reveal, .page-enter { opacity: 1; transform: none; animation: none; transition: none; }
   .frame img { transition: none; }
+  /* Body theme cross-fade: flip instantly rather than easing. */
+  body { transition: none; }
+  /* Looping decoration — the marquee never stops on its own, so it has to
+     be stopped here. Held at frame 0 so the content stays readable. */
+  .animate-marquee,
+  .animate-marquee-vertical { animation: none; }
+  /* One-shot flourishes: keep the end state, skip the movement. */
+  .animate-rippling { animation: none; opacity: 0; }
+  .fade-in-anim { animation: none; }
 }
 
 /* ---- MDX prose (hand-rolled; no typography plugin needed at this scale) ---- */

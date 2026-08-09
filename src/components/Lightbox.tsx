@@ -51,29 +51,29 @@ export function Lightbox({ photos, index, onClose, onNavigate }: LightboxProps) 
               />
               <button
                 onClick={() => onNavigate((index! - 1 + photos.length) % photos.length)}
-                className="absolute -left-2 top-1/2 -translate-y-1/2 p-3 text-[#eae2d3]/60 transition-colors hover:text-[#e68a3b] sm:-left-14"
+                className="absolute -left-2 top-1/2 -translate-y-1/2 p-3 text-dr-ink/60 transition-colors hover:text-dr-mask sm:-left-14"
                 aria-label="Previous photo"
               >
                 <ChevronLeft className="size-6" />
               </button>
               <button
                 onClick={() => onNavigate((index! + 1) % photos.length)}
-                className="absolute -right-2 top-1/2 -translate-y-1/2 p-3 text-[#eae2d3]/60 transition-colors hover:text-[#e68a3b] sm:-right-14"
+                className="absolute -right-2 top-1/2 -translate-y-1/2 p-3 text-dr-ink/60 transition-colors hover:text-dr-mask sm:-right-14"
                 aria-label="Next photo"
               >
                 <ChevronRight className="size-6" />
               </button>
             </div>
 
-            {/* Rebate bar: hardcoded darkroom colors on purpose — the
-                lightbox is always "in the dark", whatever the site theme. */}
-            <div className="mx-auto mt-6 w-full max-w-2xl text-[#9a8f7c]">
+            {/* Rebate bar: frozen darkroom tokens on purpose — the lightbox
+                is always "in the dark", whatever the site theme. */}
+            <div className="mx-auto mt-6 w-full max-w-2xl text-dr-faded">
               <div className="sprockets opacity-40" />
               <div className="mt-2 flex items-baseline justify-between font-mono text-[0.66rem] uppercase tracking-[0.22em]">
                 <span>{photo.film}</span>
-                <span className="text-[#e68a3b]">▸ {photo.frame}</span>
+                <span className="text-dr-mask">▸ {photo.frame}</span>
               </div>
-              <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 text-[#eae2d3] sm:grid-cols-4">
+              <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 text-dr-ink sm:grid-cols-4">
                 <FilmMetadataTag label="Camera" value={photo.camera} />
                 <FilmMetadataTag label="Film / ISO" value={`${photo.film.split(" ").slice(-2).join(" ")} · ${photo.iso}`} />
                 <FilmMetadataTag label="Location" value={photo.location} />

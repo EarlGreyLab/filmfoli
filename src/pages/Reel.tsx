@@ -33,23 +33,30 @@ function Strip({
 }) {
   return (
     <ScrollVelocityRow baseVelocity={baseVelocity} className="py-3">
-      {strip.map((p) => (
+      {strip.map((p, i) => (
         <button
           key={p.id}
           type="button"
           onClick={() => onOpen(p.id)}
-          className="group relative mx-2 shrink-0 overflow-hidden rounded-sm border border-line bg-surface focus-visible:outline-2 focus-visible:outline-offset-2"
+          className="group relative mx-2 shrink-0 overflow-hidden rounded-sm border border-line bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mask"
           aria-label={`Open ${p.alt}`}
         >
+          {/* alt="" — the button's aria-label already names the frame, so a
+              second description here would just be announced twice. */}
           <img
             src={p.src}
-            alt={p.alt}
-            loading="eager"
+            alt=""
+            // The head of each strip is what's on screen at load; the tail
+            // drifts in, so let the browser fetch those on approach.
+            loading={i < 3 ? "eager" : "lazy"}
             decoding="async"
             draggable={false}
             className="h-40 w-auto object-cover transition-transform duration-500 group-hover:scale-[1.04] sm:h-52 md:h-60"
           />
-          <span className="pointer-events-none absolute bottom-1.5 left-2 font-mono text-[10px] uppercase tracking-widest text-white/90 opacity-0 drop-shadow transition-opacity duration-300 group-hover:opacity-100">
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute bottom-1.5 left-2 font-mono text-[10px] uppercase tracking-widest text-white opacity-0 drop-shadow-[0_1px_3px_rgb(0_0_0_/_0.9)] transition-opacity duration-300 group-hover:opacity-100"
+          >
             {p.frame} · {p.film}
           </span>
         </button>
@@ -95,14 +102,15 @@ export function Reel() {
         {photos.length} frames · advance the page to advance the reel
       </p>
 
-      {index !== null && (
-        <Lightbox
-          photos={photos}
-          index={index}
-          onClose={() => setIndex(null)}
-          onNavigate={setIndex}
-        />
-      )}
+      {/* Kept mounted (not gated on `index`): unmounting the Dialog in the
+          same tick as closing it robs Radix of the chance to return focus to
+          the frame that opened it, dropping keyboard users on <body>. */}
+      <Lightbox
+        photos={photos}
+        index={index}
+        onClose={() => setIndex(null)}
+        onNavigate={setIndex}
+      />
     </div>
   );
 }
